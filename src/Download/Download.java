@@ -1,7 +1,8 @@
 package Download;
 
-import sun.security.provider.PolicySpiFile;
-
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Observable;
 
@@ -60,7 +61,7 @@ public class Download extends Observable implements Runnable {
 
     public void cancel(){
         status = CANCELLED;
-        statechanged();
+        stateChanged();
     }
 
     public void error(){
@@ -68,13 +69,90 @@ public class Download extends Observable implements Runnable {
         stateChanged();
     }
 
-    public void downlaod(){
+    private void downlaod(){
         Thread thread = new Thread(this);
         thread.start();
+    }
+
+    private String getFileName(URL url){
+        String filename = url.getFile();
+        return filename.substring(filename.lastIndexOf('/')+1);
     }
 
     @Override
     public void run() {
 
+        RandomAccessFile file = null;
+        InputStream stream = null;
+
+        try{
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("Range","bytes : "+downloaded);
+            connection.connect();
+            if(connection.getResponseCode()/100 != 2){
+                error();
+            }
+
+            int contentLength = connection.getContentLength();
+
+            if(contentLength<1){
+                error();
+            }
+
+            if(size == -1){
+                size = contentLength;
+                stateChanged();
+            }
+
+            file = new RandomAccessFile(getFileName(url),"rw");
+            file.seek(downloaded);
+
+            stream = connection.getInputStream();
+            while (status == DOWNLOADING){
+                byte buffer[];
+
+                if(size-downloaded>Max_Buffer_Size){
+                    buffer = new byte[Max_Buffer_Size];
+                }
+                else {
+                    buffer = new byte[size-Max_Buffer_Size];
+                }
+
+                int read = stream.read(buffer);
+                if(read == -1){
+                    break;
+                }
+                file.write(buffer,0,read);
+                downloaded = downloaded+read;
+                stateChanged();
+                if(status == DOWNLOADING){
+                    status = COMPLETED;
+                    stateChanged();
+                }
+            }
+
+        }catch (Exception e){
+            error();
+        }
+        finally {
+            if(file != null){
+                try{
+                    file.close();
+                }catch (Exception e){
+
+                }
+            }
+            if(stream != null){
+                try{
+                    stream.close();
+                }catch (Exception e){
+
+                }
+            }
+        }
+    }
+    private  void stateChanged(){
+        setChanged();
+        notifyObservers();
     }
 }
