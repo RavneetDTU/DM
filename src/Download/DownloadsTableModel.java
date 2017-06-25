@@ -11,9 +11,32 @@ import java.util.Observer;
  */
 public class DownloadsTableModel extends AbstractTableModel implements Observer {
 
-    private static final String[] coloumnName = {"URL","Size","Progress","Status"};
-    private static final Class[] coloumnclass = {String.class,String.class, JProgressBar.class,String.class};
+    private static final String[] ColoumnName = {"URL","Size","Progress","Status"};
+    private static final Class[] Coloumnclass = {String.class,String.class, JProgressBar.class,String.class};
     private ArrayList<Download> downloadlist = new ArrayList<Download>();
+
+    public void addDownload(Download download){
+        download.addObserver(this);
+        downloadlist.add(download);
+        fireTableRowsInserted(getRowCount()-1,getRowCount()-1);
+    }
+
+    public Download getDownload(int row){
+        return downloadlist.get(row);
+    }
+
+    public void clearDownlod(int row){
+        downloadlist.remove(row);
+        fireTableRowsDeleted(row,row);
+    }
+
+    public int getColoumnCount(){
+        return ColoumnName.length;
+    }
+
+    public String getColoumnName(int col){
+        return ColoumnName[col];
+    }
 
     @Override
     public int getRowCount() {
