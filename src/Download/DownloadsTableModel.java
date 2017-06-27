@@ -2,6 +2,7 @@ package Download;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import java.awt.geom.Arc2D;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
@@ -11,8 +12,8 @@ import java.util.Observer;
  */
 public class DownloadsTableModel extends AbstractTableModel implements Observer {
 
-    private static final String[] ColoumnName = {"URL","Size","Progress","Status"};
-    private static final Class[] Coloumnclass = {String.class,String.class, JProgressBar.class,String.class};
+    private static final String[] ColumnName = {"URL","Size","Progress","Status"};
+    private static final Class[] Columnclass = {String.class,String.class, JProgressBar.class,String.class};
     private ArrayList<Download> downloadlist = new ArrayList<Download>();
 
     public void addDownload(Download download){
@@ -30,31 +31,45 @@ public class DownloadsTableModel extends AbstractTableModel implements Observer 
         fireTableRowsDeleted(row,row);
     }
 
-    public int getColoumnCount(){
-        return ColoumnName.length;
+    public String getColumnName(int col){
+        return ColumnName[col];
     }
 
-    public String getColoumnName(int col){
-        return ColoumnName[col];
-    }
+    public class getColoumn
+
 
     @Override
     public int getRowCount() {
-        return 0;
+        return downloadlist.size();
     }
 
     @Override
     public int getColumnCount() {
-        return 0;
+        return ColumnName.length;
     }
 
     @Override
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        return null;
+    public Object getValueAt(int row, int col) {
+        Download download = downloadlist.get(row);
+        switch (col){
+            case 0:
+                return download.getUrl();
+            case 1:
+                int size = download.getSize();
+                return (size==-1)?"":Integer.toString(size);
+            case 2:
+                return new Float(download.getProgress());
+            case 3:
+                return Download.STATUSES[download.getStatus()];
+                        }
+        return "";
     }
 
     @Override
     public void update(Observable o, Object arg) {
+
+        int index = downloadlist.indexOf(o);
+        fireTableRowsUpdated(index,index);
 
     }
 }
