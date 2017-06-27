@@ -35,7 +35,6 @@ public class DownloadsTableModel extends AbstractTableModel implements Observer 
         return ColumnName[col];
     }
 
-    public class getColoumn
 
 
     @Override
